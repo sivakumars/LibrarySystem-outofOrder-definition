@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Library system</title>
+</head>
+<body>
+	<script type="text/javascript" src="tinytest.js"></script>
+	<script type="text/javascript" src="librarySystemOutOfOrder.js"></script>
+	<script type="text/javascript">		
+		//test cases
+	tests({
+		//case0: Test the librarySystem API, if it exists in the window Object
+		'Is the librarySystem API , a property in the window Object' : function(){
+			eq(!!librarySystem, true);
+		},
+		//case1: Test the librarySystem API, if it is invoked with no parameters, returns the library store Object
+		'Library system API returns undefined when invoked without any parameters' : function(){
+			eq(librarySystem(), undefined);
+		},
+		//case2: Test the librarySystem API, if it is invoked with a name of a library module , empty dependecies array parameter a callback to store the library module.
+		'LibrarySystem returns a library module from the library store when invoked with the library name' : function(){
+			librarySystem('test library', [], function(){
+				return 'test library module';
+			});
+			eq(librarySystem('test library'), 'test library module');
+		},
+		//case3: Check for the dependencies parameter in Library system API to be of type Array
+		'Is the dependencies parameter in Library system API of type Array? if No , throw an error' : function(){
+			try{
+				librarySystem('test', '', function(){
+					return 'test module';
+				});
+			}catch(e){                                
+				eq((e instanceof TypeError), true);
+			}
+		},
+		//case4: library Module with dependencies which are not in libraryStore,  
+				//nothing should be stored in the library store against this library Module.
+				//LibraryDependencyMap should be updated with an object containing dependencies and callback function against this library Module.
+		'LibrarySystem should throw an error when retrieving the module whose dependencies are not defined in the library system.': function() {
+			librarySystem('test dependency', ['dependency1', 'dependency2'], function(){
+				return 'test dependency module';
+			});
+			try{
+				librarySystem('test dependency')
+			}catch(e){
+				eq(e instanceof Error, true);
+			}			
+		},
+		//case5: libray module with dependencies of which some are not in libraryStore and some already loaded in 	       libraryStore,  
+				//nothing should be stored in the library store against this library Module.
+				//LibraryDependencyMap should be updated with an object containing dependencies and callback function against this library Module.
+		'LibrarySystem should get the library module irrespective of the order in which its dependencies are stored' : function(){
+			librarySystem('company', [], function() {
+			  return 'Watch and Code';
+			});
+
+			librarySystem('workBlurb', ['name', 'company'], function(name, company) {
+			  return name + ' works at ' + company;
+			});
+
+			librarySystem('name', [], function() {
+			  return 'Gordon';
+			});
+
+			eq(librarySystem('workBlurb'), 'Gordon works at Watch and Code');
+		},
+		//case6: library with dependencies which are in libraryStore,
+			    //The libraryStore should be updated with the return value(library module) of the callback function
+			    //The library dependency map should have no object related to this name(module)
+		'LibrarySystem should get the library module if its dependencies are stored in order' : function(){
+			librarySystem('school', [], function() {
+			  return 'Watch and Code';
+			});
+
+			librarySystem('name', [], function() {
+			  return 'Siva';
+			});
+
+			librarySystem('studyBlurb', ['name', 'school'], function(name, school) {
+			  return name + ' studies at ' + school;
+			});
+
+			eq(librarySystem('studyBlurb'), 'Siva studies at Watch and Code');
+		},
+		//case7: The callback function should be invoked only once irrespective of how many times the librarysystem  API is invoked.
+		'Library module callback function should be invoked only once irrespective of how many times the librarysystem  API is invoked.':function() {
+			var counter = 0;
+			librarySystem('company', [], function() {
+			  return 'Watch and Code';
+			});
+
+			librarySystem('name', [], function() {
+			  return 'Gordon';
+			});
+
+			librarySystem('workBlurb', ['name', 'company'], function(name, company) {
+			  counter++;
+			  return name + ' works at ' + company;
+			});
+
+			eq(librarySystem('workBlurb'), 'Gordon works at Watch and Code');
+			eq(counter, 1);
+			eq(librarySystem('workBlurb'), 'Gordon works at Watch and Code');
+			eq(counter, 1);
+			eq(librarySystem('workBlurb'), 'Gordon works at Watch and Code');
+			eq(counter, 1);
+		},
+		'Library system should get library module with nested dependencies' : function(){
+			librarySystem('deps2', ['deps3','deps4'], function(deps3, deps4){
+				return 'dependency 2 '+deps3+' '+deps4;
+			});
+
+			librarySystem('Dependency', ['deps1','deps2'], function(deps1, deps2){
+				return 'Name dependency '+deps1+' '+deps2;
+			});
+
+			librarySystem('deps1', ['deps5'], function(deps5){
+				return 'dependency 1 '+deps5;
+			});
+
+			librarySystem('deps3', [], function(){
+				return 'deps 3';
+			});
+
+			librarySystem('deps4', [], function(){
+				return 'deps 4';
+			});
+
+			librarySystem('deps5', [], function(){
+				return 'deps 5';
+			});
+
+			eq(librarySystem('Dependency'), 
+			'Name dependency '+'dependency 1 '+'deps 5'+' '+'dependency 2 '+'deps 3'+' '+'deps 4')
+		}
+	});
+	</script>
+</body>
+</html>
