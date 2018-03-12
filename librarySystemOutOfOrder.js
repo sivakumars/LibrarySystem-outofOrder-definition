@@ -34,7 +34,15 @@ Recursion :  Base case : Library without dependencies
 (function(root){
   var libraryStore={};
   var libraryDependencyMap = {};
+  /*
+    Throw an error if the dependencies are not of the array type.
+    If the dependencies length is greater than zero , Store the meta details of the libray 
+    like the dependency names and the callbackfunction used to get thelibrary module.
+    Else, Invoke the Callback function and store the library module in the library Store.
 
+    To retrieve a module, invoke library system with just the name as a parameter.
+    if the module returned is valid , return it , Else, throw an error of missing library.
+  */
   var librarySystem = function(libraryName, dependencies, callbackFn){
     if(arguments.length > 1) {
       if(!Array.isArray(dependencies)) {
@@ -57,7 +65,11 @@ Recursion :  Base case : Library without dependencies
       }
     }
   };
-
+  /*
+    A method to create a store of library modules or store meta information of library dependencies.
+    If the library Store has all the dependencies already loaded, then just invoke the callback function.
+    Else, Store the meta info of the library in a map - libraryDependencyMap 
+  */
   function createLibraryStore(dependencies, libraryName, callbackFn) {
     var allDependenciesLoadedFlag = dependencies.every(function(item) {
             return libraryStore.hasOwnProperty(item) && libraryStore[item];
@@ -68,10 +80,18 @@ Recursion :  Base case : Library without dependencies
       libraryDependencyMap[libraryName] = {
         dependentModuleNames : dependencies,
         getModule: callbackFn  
-      } 
+      }
     }
   }
+  /*
+  * A method to get the library modules from the library store.
 
+  * If libraryStore already has a value/module loaded , return the libraryStore[name]
+  
+  * Else, Iterate through the libraryDependencyMap to get the meta details of the library
+    and loop through the dependencies to get the dependent library modules and recurse if there
+    are nested dependencies.
+  */
   function getLibraryModule(libraryName) {
     if(libraryStore[libraryName]) {
         return libraryStore[libraryName];
